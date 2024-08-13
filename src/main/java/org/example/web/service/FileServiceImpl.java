@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.bson.types.ObjectId;
+import org.example.exception.ApiException;
 import org.example.secuiry.model.UserEntity;
 import org.example.secuiry.repository.UserRepository;
 import org.example.web.dto.*;
@@ -30,70 +31,78 @@ public class FileServiceImpl implements FileService {
 
 	@Override
 	public SaveFileDto.Response saveFile(MultipartFile file, String userId) throws IOException {
-		String fileName = file.getOriginalFilename();
-		// only process files with .csv extension
-		if (!fileName.endsWith(".csv")) {
-			throw new RuntimeException("Invalid file type");
-		}
 
-		BufferedReader fileReader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
-		CSVParser csvParser = new CSVParser(fileReader, CSVFormat.EXCEL.withHeader());
+		try {
 
-		Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-		List<CsvData> csvData = new ArrayList<>();
+			String fileName = file.getOriginalFilename();
+			// only process files with .csv and .xlsx extensions
+			assert fileName != null;
+			if (!fileName.endsWith(".csv") && !fileName.endsWith(".xlsx")) {
+				throw new ApiException("Invalid file type", "", "");
+			}
 
-		for (CSVRecord csvRecord : csvRecords) {
-			Integer no = Integer.valueOf(csvRecord.get("No"));
-			String nme = csvRecord.get("Name");
-			String type = csvRecord.get("Type");
-			String number = csvRecord.get("Number");
-			String keeperOne = csvRecord.get("Keeper One");
-			String keeperSecond = csvRecord.get("Keeper Second");
-			String borrowDate = csvRecord.get("Borrow Date");
-			String dateReceived = csvRecord.get("Date Received");
-			String productCode = csvRecord.get("Product Code");
-			String transferMethod = csvRecord.get("Transfer Method");
-			String note = csvRecord.get("Note");
+			BufferedReader fileReader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+			CSVParser csvParser = new CSVParser(fileReader, CSVFormat.EXCEL.withHeader());
+
+			Iterable<CSVRecord> csvRecords = csvParser.getRecords();
+			List<CsvData> csvData = new ArrayList<>();
+
+			for (CSVRecord csvRecord : csvRecords) {
+				Integer no = Integer.valueOf(csvRecord.get("No"));
+				String nme = csvRecord.get("Name");
+				String type = csvRecord.get("Type");
+				String number = csvRecord.get("Number");
+				String keeperOne = csvRecord.get("Keeper One");
+				String keeperSecond = csvRecord.get("Keeper Second");
+				String borrowDate = csvRecord.get("Borrow Date");
+				String dateReceived = csvRecord.get("Date Received");
+				String productCode = csvRecord.get("Product Code");
+				String transferMethod = csvRecord.get("Transfer Method");
+				String note = csvRecord.get("Note");
 
 
-			CsvData fileDt = CsvData.builder()
-					.no(no)
-					.name(nme)
-					.type(type)
-					.number(number)
-					.keeperOne(keeperOne)
-					.keeperSecond(keeperSecond)
-					.borrowDate(borrowDate)
-					.dateReceived(dateReceived)
-					.productCode(productCode)
-					.transferMethod(transferMethod)
-					.code(note)
+				CsvData fileDt = CsvData.builder()
+						.no(no)
+						.name(nme)
+						.type(type)
+						.number(number)
+						.keeperOne(keeperOne)
+						.keeperSecond(keeperSecond)
+						.borrowDate(borrowDate)
+						.dateReceived(dateReceived)
+						.productCode(productCode)
+						.transferMethod(transferMethod)
+						.code(note)
+						.build();
+				csvData.add(fileDt);
+				System.out.println(fileDt);
+			}
+
+			Optional<UserEntity> userById = userRepository.findById(userId);
+			FileInfo fileInfo = FileInfo.builder()
+					.id(new ObjectId())
+					.fileName(fileName)
+					.csvData(csvData)
+					.createdAt(LocalDateTime.now())
+					.updatedAt(LocalDateTime.now())
 					.build();
-			csvData.add(fileDt);
-			System.out.println(fileDt);
+
+
+			if (userById.isPresent()) {
+				UserEntity userEntity = userById.get();
+				List<FileInfo> fileInfosEntity = userEntity.getFileInfos();
+				fileInfosEntity.add(fileInfo);
+				userEntity.setFileInfos(fileInfosEntity);
+				userRepository.save(userEntity);
+			}
+
+			return SaveFileDto.Response.builder()
+					.message("File uploaded successfully")
+					.build();
+		} catch (IOException e) {
+			throw new ApiException("Error occurred while uploading file", "", "");
 		}
 
-		Optional<UserEntity> userById = userRepository.findById(userId);
-		FileInfo fileInfo = FileInfo.builder()
-				.id(new ObjectId())
-				.fileName(fileName)
-				.csvData(csvData)
-				.createdAt(LocalDateTime.now())
-				.updatedAt(LocalDateTime.now())
-				.build();
-
-
-		if (userById.isPresent()) {
-			UserEntity userEntity = userById.get();
-			List<FileInfo> fileInfosEntity = userEntity.getFileInfos();
-			fileInfosEntity.add(fileInfo);
-			userEntity.setFileInfos(fileInfosEntity);
-			userRepository.save(userEntity);
-		}
-
-		return SaveFileDto.Response.builder()
-				.message("File uploaded successfully")
-				.build();
 	}
 
 	@Override

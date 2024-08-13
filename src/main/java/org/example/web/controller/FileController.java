@@ -22,6 +22,10 @@ public class FileController {
 		return fileService.saveFile(file, userId);
 	}
 
+	@GetMapping("/api/user/getFilesByUserId")
+	public GetFilesByUserId.Response getFilesByUserId(@RequestParam String userName) {
+		return fileService.getFilesByUserName(userName);
+	}
 	@GetMapping("/api/user/getFileById")
 	public GetFileById.Response getFileById(@RequestParam String userName, @RequestParam String fileId) {
 		return fileService.getFileById(userName, fileId);
@@ -32,8 +36,5 @@ public class FileController {
 		return fileService.updateFileById(request);
 	}
 
-	@GetMapping("/api/user/getFilesByUserId")
-	public GetFilesByUserId.Response getFilesByUserId(@RequestParam String userName) {
-		return fileService.getFilesByUserName(userName);
-	}
+
 }
