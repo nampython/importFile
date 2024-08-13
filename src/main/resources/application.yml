@@ -1,0 +1,6 @@
+spring:
+
+  data:
+    mongodb:
+      uri: mongodb+srv://root:root@hrdept-cluster.1xl9ayf.mongodb.net/?retryWrites=true&w=majority
+      database: importFile
