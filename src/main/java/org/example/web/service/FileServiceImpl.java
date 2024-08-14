@@ -346,4 +346,32 @@ public class FileServiceImpl implements FileService {
 				.activityLogs(activityLogs)
 				.build();
 	}
+
+	@Override
+	public SaveFileDto.Response saveFile(SaveFileDto.Request request) {
+		Optional<UserEntity> byId = userRepository.findByUserName(request.getUserName());
+		if (byId.isPresent()) {
+			UserEntity userEntity = byId.get();
+			FileInfo fileInfo = FileInfo.builder()
+					.id(new ObjectId())
+					.fileName(request.getFileName())
+					.csvData(request.getCsvData())
+					.createdAt(LocalDateTime.now())
+					.updatedAt(LocalDateTime.now())
+					.build();
+			List<FileInfo> fileInfos = userEntity.getFileInfos();
+			fileInfos.add(fileInfo);
+			userEntity.setFileInfos(fileInfos);
+			userRepository.save(userEntity);
+			return SaveFileDto.Response.builder()
+					.userId(request.getUserName())
+					.fileName(request.getFileName())
+					.csvData(request.getCsvData())
+					.createdAt(LocalDateTime.now().toString())
+					.message("File uploaded successfully")
+					.build();
+		} else {
+			throw new ApiException("User not found", "", "");
+		}
+	}
 }

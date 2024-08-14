@@ -17,4 +17,6 @@ public interface FileService {
 	GetLogUserDto.Response getLogsUser(String userName);
 
 	GetActivityFile.Response getActivityFile(String userName);
+
+	SaveFileDto.Response saveFile(SaveFileDto.Request request);
 }

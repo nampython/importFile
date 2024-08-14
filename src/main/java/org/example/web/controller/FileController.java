@@ -24,6 +24,10 @@ public class FileController {
 		return fileService.saveFile(file, userId);
 	}
 
+	@PostMapping("/api/user/saveFileData")
+	SaveFileDto.Response saveFileData(@RequestBody SaveFileDto.Request request) {
+		return fileService.saveFile(request);
+	}
 
 	@GetMapping("/api/user/getFilesByUserId")
 	public GetFilesByUserId.Response getFilesByUserId(@RequestParam String userName) {
