@@ -8,6 +8,7 @@ import org.example.secuiry.dto.SignUpDto;
 import org.example.secuiry.model.UserEntity;
 import org.example.secuiry.repository.UserRepository;
 import org.example.secuiry.util.JwtTokenUtil;
+import org.example.web.dto.HistoryUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,6 +42,7 @@ public class SecurityServiceImpl implements SecurityService {
 
 		UserEntity userEntity = UserEntity.builder()
 				.activityLogs(new ArrayList<>())
+				.historyUsers(new ArrayList<>())
 				.createdAt(LocalDateTime.now())
 				.updatedAt(null)
 				.fileInfos(new ArrayList<>())
@@ -62,9 +64,20 @@ public class SecurityServiceImpl implements SecurityService {
 		Authentication authenticate;
 
 		try {
-			 Authentication authentication = new UsernamePasswordAuthenticationToken(username, password);
-			 authenticate = authenticationManager.authenticate(authentication);
+			Authentication authentication = new UsernamePasswordAuthenticationToken(username, password);
+			authenticate = authenticationManager.authenticate(authentication);
 			Map<String, String> tokens = jwtUtils.generateTokens(authenticate);
+
+			HistoryUser historyUser = HistoryUser.builder()
+					.location("Ho Chi Minh")
+					.createdAt(LocalDateTime.now())
+					.build();
+
+			UserEntity userEntity = userRepository.findByUserName(username).get();
+			userEntity.getHistoryUsers().add(historyUser);
+			userRepository.save(userEntity);
+
+
 			return LoginDto.Response.builder()
 					.username(authentication.getName())
 					.token(tokens.get(JwtTokenUtil.ACCESS_TOKEN))

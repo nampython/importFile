@@ -11,12 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ActivityLogOperation {
-	private String fileId;
-	private Integer no;
-	private CsvData oldData;
-	private CsvData newData;
-	private Action action;
+public class HistoryUser {
+	private String location;
 	private LocalDateTime createdAt;
-	private LocalDateTime updatedAt;
 }

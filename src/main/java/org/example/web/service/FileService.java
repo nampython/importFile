@@ -1,9 +1,6 @@
 package org.example.web.service;
 
-import org.example.web.dto.GetFileById;
-import org.example.web.dto.GetFilesByUserId;
-import org.example.web.dto.SaveFileDto;
-import org.example.web.dto.UpdateFileByIdDto;
+import org.example.web.dto.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -16,4 +13,8 @@ public interface FileService {
 	GetFileById.Response getFileById(String userName, String fileId);
 
 	UpdateFileByIdDto.Response updateFileById(UpdateFileByIdDto.Request request);
+
+	GetLogUserDto.Response getLogsUser(String userName);
+
+	GetActivityFile.Response getActivityFile(String userName);
 }

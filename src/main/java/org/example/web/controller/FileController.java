@@ -1,10 +1,7 @@
 package org.example.web.controller;
 
 import lombok.AllArgsConstructor;
-import org.example.web.dto.GetFileById;
-import org.example.web.dto.GetFilesByUserId;
-import org.example.web.dto.SaveFileDto;
-import org.example.web.dto.UpdateFileByIdDto;
+import org.example.web.dto.*;
 import org.example.web.service.FileService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,10 +19,17 @@ public class FileController {
 		return fileService.saveFile(file, userId);
 	}
 
+	@PostMapping("/api/user/saveFile")
+	public SaveFileDto.Response saveFilePost(@RequestPart("file") MultipartFile file, @RequestParam String userId) throws IOException {
+		return fileService.saveFile(file, userId);
+	}
+
+
 	@GetMapping("/api/user/getFilesByUserId")
 	public GetFilesByUserId.Response getFilesByUserId(@RequestParam String userName) {
 		return fileService.getFilesByUserName(userName);
 	}
+
 	@GetMapping("/api/user/getFileById")
 	public GetFileById.Response getFileById(@RequestParam String userName, @RequestParam String fileId) {
 		return fileService.getFileById(userName, fileId);
@@ -36,5 +40,13 @@ public class FileController {
 		return fileService.updateFileById(request);
 	}
 
+	@GetMapping("/api/user/logs")
+	public GetLogUserDto.Response getLogUsers(@RequestParam String userName) {
+		return fileService.getLogsUser(userName);
+	}
 
+	@GetMapping("/api/user/activity")
+	public GetActivityFile.Response getActivityFile(@RequestParam String userName) {
+		return fileService.getActivityFile(userName);
+	}
 }

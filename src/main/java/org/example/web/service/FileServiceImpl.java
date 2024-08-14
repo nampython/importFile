@@ -97,6 +97,10 @@ public class FileServiceImpl implements FileService {
 			}
 
 			return SaveFileDto.Response.builder()
+					.userId(userId)
+					.fileName(fileName)
+					.csvData(csvData)
+					.createdAt(LocalDateTime.now().toString())
 					.message("File uploaded successfully")
 					.build();
 		} catch (IOException e) {
@@ -159,7 +163,7 @@ public class FileServiceImpl implements FileService {
 			List<FileInfo> fileInfos = userEntity.getFileInfos();
 			for (FileInfo fileInfo : fileInfos) {
 				if (fileInfo.getId().toString().equals(request.getFileId())) {
-					processLog(fileInfo.getCsvData(), request.getCsvData(), userEntity);
+					processLog(fileInfo.getCsvData(), request.getCsvData(), userEntity, fileInfo.getId().toString());
 					fileInfo.setFileName(request.getFileName());
 					fileInfo.setCsvData(request.getCsvData());
 					fileInfo.setUpdatedAt(LocalDateTime.now());
@@ -173,18 +177,19 @@ public class FileServiceImpl implements FileService {
 				.build();
 	}
 
-	private void processLog(List<CsvData> oldData, List<CsvData> newData, UserEntity userEntity) {
-		List<ActivityLog> activityLogUpdateRows = userEntity.getActivityLogs();
+	private void processLog(List<CsvData> oldData, List<CsvData> newData, UserEntity userEntity, String fileId) {
+		List<ActivityLog> activityLogs = userEntity.getActivityLogs();
 		List<Integer> oldNo = oldData.stream().map(CsvData::getNo).toList();
 		List<Integer> newNo = newData.stream().map(CsvData::getNo).toList();
 
-		List<ActivityLogOperation> logForNewData = new ArrayList<>();
-		List<ActivityLogOperation> logForDeletedData = new ArrayList<>();
 		ActivityLog activityLog = new ActivityLog();
 
+
+		List<ActivityLogOperation> logForNewData = new ArrayList<>();
 		for (CsvData newDt : newData) {
 			if (!oldNo.contains(newDt.getNo())) {
 				ActivityLogOperation activityLogUpdateRow = ActivityLogOperation.builder()
+						.fileId(fileId)
 						.action(Action.ADD)
 						.no(newDt.getNo())
 						.oldData(null)
@@ -196,8 +201,149 @@ public class FileServiceImpl implements FileService {
 			}
 		}
 
-		activityLog.setActivityLogOperation(logForNewData);
-		activityLogUpdateRows.add(activityLog);
-		userEntity.setActivityLogs(activityLogUpdateRows);
+		List<ActivityLogOperation> logForDeletedData = new ArrayList<>();
+		for (CsvData oldDt : oldData) {
+			if (!newNo.contains(oldDt.getNo())) {
+				ActivityLogOperation activityLogUpdateRow = ActivityLogOperation.builder()
+						.fileId(fileId)
+						.action(Action.DELETE)
+						.no(oldDt.getNo())
+						.oldData(oldDt)
+						.newData(null)
+						.createdAt(LocalDateTime.now())
+						.updatedAt(LocalDateTime.now())
+						.build();
+				logForDeletedData.add(activityLogUpdateRow);
+			}
+		}
+
+		List<ActivityLogOperation> activityLogOperations = new ArrayList<>();
+		if (!logForNewData.isEmpty()) {
+			activityLogOperations.addAll(logForNewData);
+		}
+
+		if (!logForDeletedData.isEmpty()) {
+			activityLogOperations.addAll(logForDeletedData);
+		}
+
+		activityLogUpdateRow(activityLog, oldData, newData);
+		activityLog.setActivityLogOperation(activityLogOperations);
+		activityLogs.add(activityLog);
+		userEntity.setActivityLogs(activityLogs);
+	}
+
+	public void activityLogUpdateRow(ActivityLog activityLog, List<CsvData> oldData, List<CsvData> newData) {
+		int indexForOldData = 0;
+		int indexForNewData = 0;
+		List<ActivityLogUpdateRow> activityLogUpdateRow = new ArrayList<>();
+
+		while (indexForOldData < oldData.size() && indexForNewData < newData.size()) {
+
+			CsvData oldCsvData = oldData.get(indexForOldData);
+			CsvData newCsvData = newData.get(indexForNewData);
+
+			ActivityLogUpdateRow updateRow = new ActivityLogUpdateRow();
+			activityLogUpdateRow(oldCsvData, newCsvData, updateRow);
+
+			if (!updateRow.isNull()) {
+				updateRow.setAction(Action.UPDATE);
+				updateRow.setCreatedAt(LocalDateTime.now());
+				activityLogUpdateRow.add(updateRow);
+			}
+			indexForOldData++;
+			indexForNewData++;
+		}
+		if (!activityLogUpdateRow.isEmpty()) {
+			activityLog.setActivityLogUpdateRow(activityLogUpdateRow);
+		}
+	}
+
+	private void activityLogUpdateRow(CsvData oldCsvData, CsvData newCsvData, ActivityLogUpdateRow activityLogUpdateRow) {
+		if (!oldCsvData.getName().equals(newCsvData.getName())) {
+			activityLogUpdateRow.setColumnName("Name");
+			activityLogUpdateRow.setOldValue(oldCsvData.getName());
+			activityLogUpdateRow.setNewValue(newCsvData.getName());
+		}
+
+		if (!oldCsvData.getType().equals(newCsvData.getType())) {
+			activityLogUpdateRow.setColumnName("Type");
+			activityLogUpdateRow.setOldValue(oldCsvData.getType());
+			activityLogUpdateRow.setNewValue(newCsvData.getType());
+		}
+
+		if (!oldCsvData.getNumber().equals(newCsvData.getNumber())) {
+			activityLogUpdateRow.setColumnName("Number");
+			activityLogUpdateRow.setOldValue(oldCsvData.getNumber());
+			activityLogUpdateRow.setNewValue(newCsvData.getNumber());
+		}
+
+		if (!oldCsvData.getKeeperOne().equals(newCsvData.getKeeperOne())) {
+			activityLogUpdateRow.setColumnName("Keeper One");
+			activityLogUpdateRow.setOldValue(oldCsvData.getKeeperOne());
+			activityLogUpdateRow.setNewValue(newCsvData.getKeeperOne());
+		}
+
+		if (!oldCsvData.getKeeperSecond().equals(newCsvData.getKeeperSecond())) {
+			activityLogUpdateRow.setColumnName("Keeper Second");
+			activityLogUpdateRow.setOldValue(oldCsvData.getKeeperSecond());
+			activityLogUpdateRow.setNewValue(newCsvData.getKeeperSecond());
+		}
+
+		if (!oldCsvData.getBorrowDate().equals(newCsvData.getBorrowDate())) {
+			activityLogUpdateRow.setColumnName("Borrow Date");
+			activityLogUpdateRow.setOldValue(oldCsvData.getBorrowDate());
+			activityLogUpdateRow.setNewValue(newCsvData.getBorrowDate());
+		}
+
+		if (!oldCsvData.getDateReceived().equals(newCsvData.getDateReceived())) {
+			activityLogUpdateRow.setColumnName("Date Received");
+			activityLogUpdateRow.setOldValue(oldCsvData.getDateReceived());
+			activityLogUpdateRow.setNewValue(newCsvData.getDateReceived());
+		}
+
+		if (!oldCsvData.getProductCode().equals(newCsvData.getProductCode())) {
+			activityLogUpdateRow.setColumnName("Product Code");
+			activityLogUpdateRow.setOldValue(oldCsvData.getProductCode());
+			activityLogUpdateRow.setNewValue(newCsvData.getProductCode());
+		}
+
+		if (!oldCsvData.getTransferMethod().equals(newCsvData.getTransferMethod())) {
+			activityLogUpdateRow.setColumnName("Transfer Method");
+			activityLogUpdateRow.setOldValue(oldCsvData.getTransferMethod());
+			activityLogUpdateRow.setNewValue(newCsvData.getTransferMethod());
+		}
+
+		if (!oldCsvData.getCode().equals(newCsvData.getCode())) {
+			activityLogUpdateRow.setColumnName("Code");
+			activityLogUpdateRow.setOldValue(oldCsvData.getCode());
+			activityLogUpdateRow.setNewValue(newCsvData.getCode());
+		}
+
+	}
+
+	@Override
+	public GetLogUserDto.Response getLogsUser(String userName) {
+		Optional<UserEntity> byId = userRepository.findByUserName(userName);
+		if (byId.isPresent()) {
+			UserEntity userEntity = byId.get();
+			List<HistoryUser> historyUsers = userEntity.getHistoryUsers();
+			return GetLogUserDto.Response.builder()
+					.userName(userName)
+					.historyUsers(historyUsers)
+					.build();
+		} else {
+			throw  new ApiException("User not found", "", "");
+		}
+	}
+
+
+	@Override
+	public GetActivityFile.Response getActivityFile(String userName) {
+		UserEntity userEntity = userRepository.findByUserName(userName).orElseThrow(() -> new ApiException("User not found", "", ""));
+		List<ActivityLog> activityLogs = userEntity.getActivityLogs();
+		return GetActivityFile.Response.builder()
+				.userName(userName)
+				.activityLogs(activityLogs)
+				.build();
 	}
 }

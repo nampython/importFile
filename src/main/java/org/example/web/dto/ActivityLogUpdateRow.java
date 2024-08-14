@@ -17,4 +17,8 @@ public class ActivityLogUpdateRow {
 	private Action action;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+
+	public Boolean isNull() {
+		return this.row == null && this.column == null && this.columnName == null && this.oldValue == null && this.newValue == null;
+	}
 }
