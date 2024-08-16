@@ -8,7 +8,7 @@ import java.io.IOException;
 public interface FileService {
 	SaveFileDto.Response saveFile(MultipartFile file, String userId) throws IOException;
 
-	GetFilesByUserId.Response getFilesByUserName(String userId);
+	GetFilesByUserId.Response getFilesByUserName(String userId, GetFilesByUserId.Request request);
 
 	GetFileById.Response getFileById(String userName, String fileId);
 

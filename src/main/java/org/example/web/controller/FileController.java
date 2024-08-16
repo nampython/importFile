@@ -30,8 +30,8 @@ public class FileController {
 	}
 
 	@GetMapping("/api/user/getFilesByUserId")
-	public GetFilesByUserId.Response getFilesByUserId(@RequestParam String userName) {
-		return fileService.getFilesByUserName(userName);
+	public GetFilesByUserId.Response getFilesByUserId(@RequestBody GetFilesByUserId.Request request, @RequestParam String userName) {
+		return fileService.getFilesByUserName(userName, request);
 	}
 
 	@GetMapping("/api/user/getFileById")

@@ -10,16 +10,22 @@ import org.example.secuiry.model.UserEntity;
 import org.example.secuiry.repository.UserRepository;
 import org.example.web.dto.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -110,7 +116,7 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
-	public GetFilesByUserId.Response getFilesByUserName(String userName) {
+	public GetFilesByUserId.Response getFilesByUserName(String userName, GetFilesByUserId.Request request) {
 		Optional<UserEntity> byUserName = userRepository.findByUserName(userName);
 		if (byUserName.isPresent()) {
 			UserEntity userEntity = byUserName.get();
@@ -124,11 +130,44 @@ public class FileServiceImpl implements FileService {
 						.build();
 				fileInfoDTOS.add(fileInfoDTO);
 			}
+			fileInfoDTOS.sort((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()));
+
+			if (Objects.isNull(request.getSearchByKeyword())) {
+
+				DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+				// Check if the keyword is a valid date
+				LocalDate date = parseDate(request.getSearchByKeyword(), dateFormatter);
+				List<GetFilesByUserId.FileInfoDTO> collect = fileInfoDTOS.stream()
+						.filter(fileInfoDTO -> {
+							if (date != null) {
+								// If keyword is a date, filter by date
+								return fileInfoDTO.getCreatedAt().toLocalDate().equals(date);
+							} else {
+								// If keyword is not a date, filter by filename
+								return fileInfoDTO.getFileName().toLowerCase().contains(request.getSearchByKeyword().toLowerCase());
+							}
+						})
+						.collect(Collectors.toList());
+				return GetFilesByUserId.Response.builder()
+						.fileInfos(collect)
+						.build();
+			}
+
 			return GetFilesByUserId.Response.builder()
 					.fileInfos(fileInfoDTOS)
 					.build();
 		}
+
 		return null;
+	}
+
+	private LocalDate parseDate(String keyword, DateTimeFormatter dateFormatter) {
+		try {
+			return LocalDate.parse(keyword, dateFormatter);
+		} catch (DateTimeParseException e) {
+			return null; // Not a date
+		}
 	}
 
 
