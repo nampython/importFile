@@ -9,6 +9,9 @@ import org.example.exception.ApiException;
 import org.example.secuiry.model.UserEntity;
 import org.example.secuiry.repository.UserRepository;
 import org.example.web.dto.*;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,10 +19,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -110,27 +115,87 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
-	public GetFilesByUserId.Response getFilesByUserName(String userName) {
+	public GetFilesByUserId.Response getFilesByUserName(String userName, GetFilesByUserId.Request request, Integer page, Integer pageSize) {
+		List<FileInfo> listFileInfo;
+		List<GetFilesByUserId.FileInfoDTO> fileInfoDTOS;
+		Page<GetFilesByUserId.FileInfoDTO> listFileInfoDTO;
 		Optional<UserEntity> byUserName = userRepository.findByUserName(userName);
+		Pageable pageable = PageRequest.of(page, pageSize);
 		if (byUserName.isPresent()) {
-			UserEntity userEntity = byUserName.get();
-			List<FileInfo> fileInfos = userEntity.getFileInfos();
-			List<GetFilesByUserId.FileInfoDTO> fileInfoDTOS = new ArrayList<>();
-			for (FileInfo fileInfo : fileInfos) {
-				GetFilesByUserId.FileInfoDTO fileInfoDTO = GetFilesByUserId.FileInfoDTO.builder()
-						.id(fileInfo.getId().toString())
-						.fileName(fileInfo.getFileName())
-						.createdAt(fileInfo.getCreatedAt())
+
+			listFileInfo = byUserName.get().getFileInfos()
+					.stream()
+					.sorted((f1, f2) -> f2.getCreatedAt().compareTo(f1.getCreatedAt())).toList();
+
+			if (listFileInfo.isEmpty()) {
+				return GetFilesByUserId.Response.builder()
+						.fileInfos(Collections.emptyList())
 						.build();
-				fileInfoDTOS.add(fileInfoDTO);
 			}
+
+			fileInfoDTOS = listFileInfo.stream()
+					.map(fileInfo -> GetFilesByUserId.FileInfoDTO.builder()
+							.id(fileInfo.getId().toString())
+							.fileName(fileInfo.getFileName())
+							.createdAt(fileInfo.getCreatedAt())
+							.build())
+					.collect(Collectors.toList());
+
+			int start = Math.min((int) pageable.getOffset(), fileInfoDTOS.size());
+			int end = Math.min((start + pageable.getPageSize()), fileInfoDTOS.size());
+
+
+			List<GetFilesByUserId.FileInfoDTO> paginatedFileInfos = fileInfoDTOS.subList(start, end);
+			listFileInfoDTO = new PageImpl<>(paginatedFileInfos, pageable, fileInfoDTOS.size());
+
+			if (!Objects.isNull(request.getSearchByKeyword())) {
+
+				DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+				// Check if the keyword is a valid date
+				LocalDate date = parseDate(request.getSearchByKeyword(), dateFormatter);
+				List<GetFilesByUserId.FileInfoDTO> collect = fileInfoDTOS.stream()
+						.filter(fileInfoDTO -> {
+							if (date != null) {
+								// If keyword is a date, filter by date
+								return fileInfoDTO.getCreatedAt().toLocalDate().equals(date);
+							} else {
+								// If keyword is not a date, filter by filename
+								return fileInfoDTO.getFileName().toLowerCase().contains(request.getSearchByKeyword().toLowerCase());
+							}
+						}).toList();
+
+				start = Math.min((int) pageable.getOffset(), collect.size());
+				end = Math.min((start + pageable.getPageSize()), collect.size());
+				paginatedFileInfos = collect.subList(start, end);
+				listFileInfoDTO = new PageImpl<>(paginatedFileInfos, pageable, fileInfoDTOS.size());
+
+				return GetFilesByUserId.Response.builder()
+						.fileInfos(listFileInfoDTO.getContent())
+						.currentPage(listFileInfoDTO.getNumber())
+						.totalItems(listFileInfoDTO.getTotalElements())
+						.totalPages(listFileInfoDTO.getTotalPages())
+						.build();
+			}
+
 			return GetFilesByUserId.Response.builder()
-					.fileInfos(fileInfoDTOS)
+					.fileInfos(listFileInfoDTO.getContent())
+					.currentPage(listFileInfoDTO.getNumber())
+					.totalItems(listFileInfoDTO.getTotalElements())
+					.totalPages(listFileInfoDTO.getTotalPages())
 					.build();
 		}
+
 		return null;
 	}
 
+	private LocalDate parseDate(String keyword, DateTimeFormatter dateFormatter) {
+		try {
+			return LocalDate.parse(keyword, dateFormatter);
+		} catch (DateTimeParseException e) {
+			return null; // Not a date
+		}
+	}
 
 	@Override
 	public GetFileById.Response getFileById(String userName, String fileId) {
