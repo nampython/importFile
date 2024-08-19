@@ -13,7 +13,7 @@ public interface SaveFileDto {
 	@ToString
 	class Response {
 		private String message;
-		private String userId;
+		private String userName;
 		private String fileName;
 		private List<CsvData> csvData;
 		private String createdAt;

@@ -102,7 +102,7 @@ public class FileServiceImpl implements FileService {
 			}
 
 			return SaveFileDto.Response.builder()
-					.userId(userId)
+					.userName(userById.get().getUserName())
 					.fileName(fileName)
 					.csvData(csvData)
 					.createdAt(LocalDateTime.now().toString())
@@ -239,6 +239,9 @@ public class FileServiceImpl implements FileService {
 
 		return UpdateFileByIdDto.Response.builder()
 				.message("Updated successfully")
+				.userName(request.getUserName())
+				.fileName(request.getFileName())
+				.csvData(request.getCsvData())
 				.build();
 	}
 
@@ -429,7 +432,7 @@ public class FileServiceImpl implements FileService {
 			userEntity.setFileInfos(fileInfos);
 			userRepository.save(userEntity);
 			return SaveFileDto.Response.builder()
-					.userId(request.getUserName())
+					.userName(request.getUserName())
 					.fileName(request.getFileName())
 					.csvData(request.getCsvData())
 					.createdAt(LocalDateTime.now().toString())

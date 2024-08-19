@@ -27,5 +27,8 @@ public interface UpdateFileByIdDto {
 	@NoArgsConstructor
 	class Response {
 		private String message;
+		private String userName;
+		private String fileName;
+		private List<CsvData> csvData;
 	}
 }
