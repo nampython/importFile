@@ -29,9 +29,11 @@ public class FileController {
 		return fileService.saveFile(request);
 	}
 
-	@GetMapping("/api/user/getFilesByUserId")
-	public GetFilesByUserId.Response getFilesByUserId(@RequestParam String userName) {
-		return fileService.getFilesByUserName(userName);
+	@GetMapping("/api/user/getFilesByUsername")
+	public GetFilesByUserId.Response getFilesByUserId(@RequestParam(required = false) String userName, @RequestBody GetFilesByUserId.Request request,
+													  @RequestParam(defaultValue = "0") Integer page,
+													  @RequestParam(defaultValue = "3") Integer pageSize) {
+		return fileService.getFilesByUserName(userName, request, page, pageSize);
 	}
 
 	@GetMapping("/api/user/getFileById")

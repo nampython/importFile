@@ -9,13 +9,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface GetFilesByUserId {
-//	@Builder
-//	@Data
-//	@AllArgsConstructor
-//	@NoArgsConstructor
-//	class Request {
-//		private String userId;
-//	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class Request {
+		private String searchByKeyword;
+	}
 
 	@Builder
 	@Data
@@ -23,6 +24,9 @@ public interface GetFilesByUserId {
 	@NoArgsConstructor
 	class Response {
 		List<FileInfoDTO> fileInfos;
+		Integer currentPage;
+		Long totalItems;
+		Integer totalPages;
 	}
 
 	@Builder
