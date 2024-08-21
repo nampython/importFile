@@ -35,7 +35,7 @@ public class FileServiceImpl implements FileService {
 
 
 	@Override
-	public SaveFileDto.Response saveFile(MultipartFile file, String userId) throws IOException {
+	public SaveFileDto.Response saveFile(MultipartFile file, String userName) throws IOException {
 
 		try {
 
@@ -83,7 +83,7 @@ public class FileServiceImpl implements FileService {
 				System.out.println(fileDt);
 			}
 
-			Optional<UserEntity> userById = userRepository.findById(userId);
+			Optional<UserEntity> userByUserName = userRepository.findByUserName(userName);
 			FileInfo fileInfo = FileInfo.builder()
 					.id(new ObjectId())
 					.fileName(fileName)
@@ -93,8 +93,8 @@ public class FileServiceImpl implements FileService {
 					.build();
 
 
-			if (userById.isPresent()) {
-				UserEntity userEntity = userById.get();
+			if (userByUserName.isPresent()) {
+				UserEntity userEntity = userByUserName.get();
 				List<FileInfo> fileInfosEntity = userEntity.getFileInfos();
 				fileInfosEntity.add(fileInfo);
 				userEntity.setFileInfos(fileInfosEntity);
@@ -102,7 +102,7 @@ public class FileServiceImpl implements FileService {
 			}
 
 			return SaveFileDto.Response.builder()
-					.userName(userById.get().getUserName())
+					.userName(userName)
 					.fileName(fileName)
 					.csvData(csvData)
 					.createdAt(LocalDateTime.now().toString())

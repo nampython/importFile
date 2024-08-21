@@ -15,13 +15,13 @@ public class FileController {
 	private final FileService fileService;
 
 	@GetMapping("/api/user/saveFile")
-	public SaveFileDto.Response saveFile(@RequestPart("file") MultipartFile file, @RequestParam String userId) throws IOException {
-		return fileService.saveFile(file, userId);
+	public SaveFileDto.Response saveFile(@RequestPart("file") MultipartFile file, @RequestParam String userName) throws IOException {
+		return fileService.saveFile(file, userName);
 	}
 
 	@PostMapping("/api/user/saveFile")
-	public SaveFileDto.Response saveFilePost(@RequestPart("file") MultipartFile file, @RequestParam String userId) throws IOException {
-		return fileService.saveFile(file, userId);
+	public SaveFileDto.Response saveFilePost(@RequestPart("file") MultipartFile file, @RequestParam String userName) throws IOException {
+		return fileService.saveFile(file, userName);
 	}
 
 	@PostMapping("/api/user/saveFileData")

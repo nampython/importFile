@@ -120,7 +120,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.authen.App</mainClass>
+                    <mainClass>org.example.App</mainClass>
                 </configuration>
             </plugin>
         </plugins>
