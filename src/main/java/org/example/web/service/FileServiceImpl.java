@@ -115,7 +115,7 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
-	public GetFilesByUserId.Response getFilesByUserName(String userName, GetFilesByUserId.Request request, Integer page, Integer pageSize) {
+	public GetFilesByUserId.Response getFilesByUserName(String userName, String searchByKeyword, Integer page, Integer pageSize) {
 		List<FileInfo> listFileInfo;
 		List<GetFilesByUserId.FileInfoDTO> fileInfoDTOS;
 		Page<GetFilesByUserId.FileInfoDTO> listFileInfoDTO;
@@ -148,12 +148,12 @@ public class FileServiceImpl implements FileService {
 			List<GetFilesByUserId.FileInfoDTO> paginatedFileInfos = fileInfoDTOS.subList(start, end);
 			listFileInfoDTO = new PageImpl<>(paginatedFileInfos, pageable, fileInfoDTOS.size());
 
-			if (!Objects.isNull(request.getSearchByKeyword())) {
+			if (!Objects.isNull(searchByKeyword)) {
 
 				DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 				// Check if the keyword is a valid date
-				LocalDate date = parseDate(request.getSearchByKeyword(), dateFormatter);
+				LocalDate date = parseDate(searchByKeyword, dateFormatter);
 				List<GetFilesByUserId.FileInfoDTO> collect = fileInfoDTOS.stream()
 						.filter(fileInfoDTO -> {
 							if (date != null) {
@@ -161,7 +161,7 @@ public class FileServiceImpl implements FileService {
 								return fileInfoDTO.getCreatedAt().toLocalDate().equals(date);
 							} else {
 								// If keyword is not a date, filter by filename
-								return fileInfoDTO.getFileName().toLowerCase().contains(request.getSearchByKeyword().toLowerCase());
+								return fileInfoDTO.getFileName().toLowerCase().contains(searchByKeyword.toLowerCase());
 							}
 						}).toList();
 

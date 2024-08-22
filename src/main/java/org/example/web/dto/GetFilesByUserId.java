@@ -10,13 +10,13 @@ import java.util.List;
 
 public interface GetFilesByUserId {
 
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class Request {
-		private String searchByKeyword;
-	}
+//	@Builder
+//	@Data
+//	@AllArgsConstructor
+//	@NoArgsConstructor
+//	class Request {
+//		private String searchByKeyword;
+//	}
 
 	@Builder
 	@Data
