@@ -33,7 +33,7 @@ public class FileController {
 	public GetFilesByUserId.Response getFilesByUserId(@RequestParam(required = false) String userName,
 													  @RequestParam(defaultValue = "0") Integer page,
 													  @RequestParam(defaultValue = "3") Integer pageSize,
-													  @RequestParam String searchByKeyword) {
+													  @RequestParam(defaultValue = "") String searchByKeyword) {
 		return fileService.getFilesByUserName(userName, searchByKeyword, page, pageSize);
 	}
 

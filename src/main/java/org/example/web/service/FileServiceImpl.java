@@ -13,6 +13,7 @@ import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -148,7 +149,7 @@ public class FileServiceImpl implements FileService {
 			List<GetFilesByUserId.FileInfoDTO> paginatedFileInfos = fileInfoDTOS.subList(start, end);
 			listFileInfoDTO = new PageImpl<>(paginatedFileInfos, pageable, fileInfoDTOS.size());
 
-			if (!Objects.isNull(searchByKeyword)) {
+			if (!StringUtils.isEmpty(searchByKeyword)) {
 
 				DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
