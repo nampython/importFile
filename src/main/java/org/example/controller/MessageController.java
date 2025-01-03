@@ -10,9 +10,11 @@ import com.linecorp.bot.webhook.model.MessageEvent;
 import com.linecorp.bot.webhook.model.TextMessageContent;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.example.utils.VertexAIService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -22,7 +24,7 @@ import java.util.List;
 public class MessageController {
 
 	private final MessagingApiClient messageApiClient;
-
+	private final VertexAIService vertexAIService;
 
 	@GetMapping("/chat")
 	public String chat() {
@@ -30,14 +32,14 @@ public class MessageController {
 	}
 
 	@EventMapping
-	public void handleTextMessageEvent(MessageEvent event) {
+	public void handleTextMessageEvent(MessageEvent event) throws IOException {
 		log.info("event: {}", event);
 		if (event.message() instanceof TextMessageContent) {
 			TextMessageContent message = (TextMessageContent) event.message();
-			final String originalMessageText = " How may i Help you? " + message.text();
+			String responseVertex = vertexAIService.textInput(message.text());
 			messageApiClient.replyMessage(new ReplyMessageRequest(
 					event.replyToken(),
-					List.of(new TextMessage(originalMessageText)),
+					List.of(new TextMessage(responseVertex)),
 					false));
 		}
 	}

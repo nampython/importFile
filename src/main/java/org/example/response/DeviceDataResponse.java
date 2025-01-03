@@ -1,9 +1,6 @@
 package org.example.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,25 +9,19 @@ import java.util.List;
 @Data
 @Builder
 public class DeviceDataResponse {
+	private List<MetaDeviceDataResponse> temperature;
+	private List<MetaDeviceDataResponse> humidity;
+	private List<MetaDeviceDataResponse> airQuality;
+	private List<MetaDeviceDataResponse> lightIntensity;
 
-	private List<Temperature> temperature;
-	private List<Humidity> humidity;
-
-	@AllArgsConstructor
-	@NoArgsConstructor
-	@Data
-	@Builder
-	static class Temperature {
-		private String value;
-		private String ts;
-	}
 
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@Data
 	@Builder
-	static class Humidity {
+	public static class MetaDeviceDataResponse {
 		private String value;
 		private String ts;
 	}
+
 }
